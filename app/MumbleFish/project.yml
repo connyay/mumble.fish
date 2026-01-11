@@ -4,6 +4,7 @@ options:
   deploymentTarget:
     macOS: "13.0"
   xcodeVersion: "15.0"
+  fileVersion: "56"
 
 settings:
   base:
