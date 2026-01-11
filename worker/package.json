@@ -5,7 +5,7 @@
   "scripts": {
     "predev": "yes | wrangler d1 migrations apply $npm_package_config_d1 --local",
     "dev": "wrangler dev",
-    "predeploy": "wrangler d1 migrations apply $npm_package_config_d1 --remote",
+    "predeploy": "npm run build --prefix ../web && wrangler d1 migrations apply $npm_package_config_d1 --remote",
     "deploy": "wrangler deploy"
   },
   "dependencies": {

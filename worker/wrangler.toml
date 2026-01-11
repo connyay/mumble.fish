@@ -17,3 +17,8 @@ database_id = "1814981e-30a9-483f-8d0f-ba6769a9349d"
 name = "RATE_LIMIT"
 namespace_id = "1"
 simple = { limit = 3, period = 10 }
+
+[assets]
+binding = "ASSETS"
+directory = "../web/dist/"
+not_found_handling = "single-page-application"

@@ -80,7 +80,14 @@ wrangler secret put GITHUB_CLIENT_ID
 wrangler secret put GITHUB_CLIENT_SECRET
 ```
 
-### 3. Deploy
+### 3. Build Web Assets
+
+```bash
+cd ../web
+npm run build
+```
+
+### 4. Deploy
 
 ```bash
 npm run deploy

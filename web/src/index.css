@@ -1,0 +1,201 @@
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Instrument+Serif:ital@0;1&display=swap");
+@import "tailwindcss";
+
+@theme {
+  /* Serene Depths color palette */
+  --color-abyss: #0a0e14;
+  --color-deep: #0f1419;
+  --color-surface: #151b23;
+  --color-mist: #1e2732;
+
+  --color-biolume: #00d4aa;
+  --color-biolume-bright: #00ffcc;
+  --color-biolume-dim: #00a080;
+
+  --color-foam: #e8f4f0;
+  --color-pearl: #c4ddd6;
+  --color-kelp: #4a7c70;
+
+  /* Typography */
+  --font-display: "Instrument Serif", Georgia, serif;
+  --font-body: "DM Sans", system-ui, sans-serif;
+}
+
+/* Base styles */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--color-abyss);
+  color: var(--color-foam);
+  overflow-x: hidden;
+  margin: 0;
+}
+
+/* Animated gradient background */
+.bg-depths {
+  background:
+    radial-gradient(ellipse 80% 50% at 50% 120%, rgba(0, 212, 170, 0.08) 0%, transparent 50%),
+    radial-gradient(ellipse 60% 40% at 80% 0%, rgba(0, 160, 128, 0.06) 0%, transparent 40%),
+    linear-gradient(180deg, var(--color-abyss) 0%, var(--color-deep) 100%);
+}
+
+/* Noise/grain texture overlay */
+.bg-noise {
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+}
+
+/* Subtle wave animation for decorative elements */
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-10px) rotate(1deg);
+  }
+}
+
+@keyframes ripple {
+  0% {
+    transform: scale(1);
+    opacity: 0.4;
+  }
+  100% {
+    transform: scale(2.5);
+    opacity: 0;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes pulse-slow {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+@keyframes bounce-slow {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(4px);
+  }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-float-delayed {
+  animation: float 6s ease-in-out infinite;
+  animation-delay: -3s;
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 2s ease-in-out infinite;
+}
+
+.animate-bounce-slow {
+  animation: bounce-slow 1.5s ease-in-out infinite;
+}
+
+/* Bioluminescent glow effect */
+.glow {
+  box-shadow:
+    0 0 20px rgba(0, 212, 170, 0.3),
+    0 0 40px rgba(0, 212, 170, 0.2),
+    0 0 60px rgba(0, 212, 170, 0.1);
+}
+
+.glow-text {
+  text-shadow:
+    0 0 10px rgba(0, 212, 170, 0.5),
+    0 0 20px rgba(0, 212, 170, 0.3);
+}
+
+/* Button hover shimmer */
+.btn-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--color-biolume) 0%,
+    var(--color-biolume-bright) 50%,
+    var(--color-biolume) 100%
+  );
+  background-size: 200% 100%;
+  transition:
+    background-position 0.3s ease,
+    transform 0.2s ease,
+    box-shadow 0.3s ease;
+}
+
+.btn-shimmer:hover {
+  background-position: 100% 0;
+  transform: translateY(-2px);
+  box-shadow:
+    0 4px 20px rgba(0, 212, 170, 0.4),
+    0 0 40px rgba(0, 212, 170, 0.2);
+}
+
+/* Feature card glass effect */
+.glass {
+  background: linear-gradient(135deg, rgba(30, 39, 50, 0.6) 0%, rgba(15, 20, 25, 0.4) 100%);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(0, 212, 170, 0.1);
+}
+
+.glass:hover {
+  border-color: rgba(0, 212, 170, 0.3);
+  background: linear-gradient(135deg, rgba(30, 39, 50, 0.8) 0%, rgba(15, 20, 25, 0.6) 100%);
+}
+
+/* Staggered entrance animations */
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-up {
+  animation: fadeUp 0.8s ease-out forwards;
+  opacity: 0;
+}
+
+.delay-100 {
+  animation-delay: 0.1s;
+}
+.delay-200 {
+  animation-delay: 0.2s;
+}
+.delay-300 {
+  animation-delay: 0.3s;
+}
+.delay-400 {
+  animation-delay: 0.4s;
+}
+.delay-500 {
+  animation-delay: 0.5s;
+}
+.delay-600 {
+  animation-delay: 0.6s;
+}
