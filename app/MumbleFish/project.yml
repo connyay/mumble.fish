@@ -3,8 +3,7 @@ options:
   bundleIdPrefix: fish.mumble
   deploymentTarget:
     macOS: "13.0"
-  xcodeVersion: "15.0"
-  fileVersion: "56"
+  xcodeVersion: "16.0"
 
 settings:
   base:
