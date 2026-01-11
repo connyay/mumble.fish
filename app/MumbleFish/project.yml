@@ -1,0 +1,40 @@
+name: MumbleFish
+options:
+  bundleIdPrefix: fish.mumble
+  deploymentTarget:
+    macOS: "13.0"
+  xcodeVersion: "15.0"
+
+settings:
+  base:
+    PRODUCT_NAME: MumbleFish
+    MARKETING_VERSION: 1.0.0
+    CURRENT_PROJECT_VERSION: 1
+    SWIFT_VERSION: "5.9"
+    MACOSX_DEPLOYMENT_TARGET: "13.0"
+
+targets:
+  MumbleFish:
+    type: application
+    platform: macOS
+    sources:
+      - Sources
+      - path: Assets.xcassets
+        buildPhase: resources
+    settings:
+      base:
+        INFOPLIST_FILE: Info.plist
+        CODE_SIGN_ENTITLEMENTS: MumbleFish.entitlements
+        CODE_SIGN_IDENTITY: "-"
+        ENABLE_HARDENED_RUNTIME: YES
+        LS_UI_ELEMENT: YES
+    info:
+      path: Info.plist
+      properties:
+        LSUIElement: true
+        NSMicrophoneUsageDescription: MumbleFish needs microphone access to transcribe your voice notes.
+        NSSpeechRecognitionUsageDescription: MumbleFish uses speech recognition to convert your voice to text.
+        CFBundleURLTypes:
+          - CFBundleURLName: MumbleFish OAuth Callback
+            CFBundleURLSchemes:
+              - mumblefish
