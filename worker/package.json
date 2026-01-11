@@ -1,0 +1,17 @@
+{
+  "name": "worker",
+  "private": true,
+  "main": "lib.rs",
+  "scripts": {
+    "predev": "yes | wrangler d1 migrations apply $npm_package_config_d1 --local",
+    "dev": "wrangler dev",
+    "predeploy": "wrangler d1 migrations apply $npm_package_config_d1 --remote",
+    "deploy": "wrangler deploy"
+  },
+  "dependencies": {
+    "wrangler": "^4.58.0"
+  },
+  "config": {
+    "d1": "mumble-fish"
+  }
+}

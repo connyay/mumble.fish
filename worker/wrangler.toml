@@ -1,0 +1,19 @@
+name = "mumble-fish"
+main = "build/worker/shim.mjs"
+compatibility_date = "2025-01-01"
+
+[build]
+command = "cargo install -q worker-build@^0.7 && worker-build --release"
+
+[vars]
+ALLOWED_REDIRECTS = "mumblefish://auth/callback,https://mumble.fish/auth/callback"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "mumble-fish"
+database_id = "1814981e-30a9-483f-8d0f-ba6769a9349d"
+
+[[ratelimits]]
+name = "RATE_LIMIT"
+namespace_id = "1"
+simple = { limit = 3, period = 10 }

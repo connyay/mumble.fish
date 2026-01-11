@@ -1,0 +1,7 @@
+node_modules/
+dist/
+target/
+.wrangler/
+
+# macOS
+.DS_Store
