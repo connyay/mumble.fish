@@ -89,7 +89,12 @@ jobs:
           # Allow codesign to access the key without prompting
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
 
-          security list-keychain -d user -s "$KEYCHAIN_PATH"
+          # Add our keychain to the front of the search list (preserve existing keychains)
+          security list-keychain -d user -s "$KEYCHAIN_PATH" $(security list-keychain -d user | tr -d '"')
+
+          # Set as default keychain
+          security default-keychain -s "$KEYCHAIN_PATH"
+
           echo "KEYCHAIN_PATH=$KEYCHAIN_PATH" >> $GITHUB_ENV
 
       - name: Build Universal App (Signed)
