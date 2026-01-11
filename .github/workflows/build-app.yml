@@ -148,12 +148,21 @@ jobs:
           xcrun stapler staple ${{ env.APP_NAME }}.app
 
       # --- Package ---
+      - name: Install create-dmg
+        run: brew install create-dmg
+
       - name: Create DMG
         run: |
-          hdiutil create -volname "${{ env.APP_NAME }}" \
-            -srcfolder "${{ runner.temp }}/export/${{ env.APP_NAME }}.app" \
-            -ov -format UDZO \
-            "${{ runner.temp }}/${{ env.APP_NAME }}.dmg"
+          create-dmg \
+            --volname "${{ env.APP_NAME }}" \
+            --window-pos 200 120 \
+            --window-size 600 400 \
+            --icon-size 100 \
+            --icon "${{ env.APP_NAME }}.app" 150 185 \
+            --hide-extension "${{ env.APP_NAME }}.app" \
+            --app-drop-link 450 185 \
+            "${{ runner.temp }}/${{ env.APP_NAME }}.dmg" \
+            "${{ runner.temp }}/export/${{ env.APP_NAME }}.app"
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
