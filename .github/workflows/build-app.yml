@@ -1,0 +1,167 @@
+name: Build macOS App
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  APP_NAME: MumbleFish
+
+jobs:
+  build:
+    runs-on: macos-14
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check for signing secrets
+        id: check-secrets
+        env:
+          CERT: ${{ secrets.APPLE_CERTIFICATE_BASE64 }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APP_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+        run: |
+          if [ -n "$CERT" ]; then
+            echo "has_certificate=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_certificate=false" >> $GITHUB_OUTPUT
+          fi
+          if [ -n "$APPLE_ID" ] && [ -n "$APP_PASSWORD" ]; then
+            echo "has_notarization=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_notarization=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode Project
+        working-directory: app/MumbleFish
+        run: xcodegen generate
+
+      # --- Unsigned Build (when no certificate) ---
+      - name: Build Universal App (Unsigned)
+        if: steps.check-secrets.outputs.has_certificate != 'true'
+        working-directory: app/MumbleFish
+        run: |
+          xcodebuild -scheme ${{ env.APP_NAME }} \
+            -configuration Release \
+            -archivePath ${{ runner.temp }}/${{ env.APP_NAME }}.xcarchive \
+            -destination "generic/platform=macOS" \
+            ARCHS="arm64 x86_64" \
+            ONLY_ACTIVE_ARCH=NO \
+            CODE_SIGN_IDENTITY="-" \
+            archive
+
+          mkdir -p ${{ runner.temp }}/export
+          cp -R "${{ runner.temp }}/${{ env.APP_NAME }}.xcarchive/Products/Applications/${{ env.APP_NAME }}.app" \
+            "${{ runner.temp }}/export/"
+
+      # --- Signed Build (when certificate available) ---
+      - name: Import Certificate
+        if: steps.check-secrets.outputs.has_certificate == 'true'
+        env:
+          CERTIFICATE_BASE64: ${{ secrets.APPLE_CERTIFICATE_BASE64 }}
+          CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+        run: |
+          KEYCHAIN_PATH=${{ runner.temp }}/app-signing.keychain-db
+          KEYCHAIN_PASSWORD=$(openssl rand -base64 32)
+
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+
+          echo "$CERTIFICATE_BASE64" | base64 --decode > ${{ runner.temp }}/certificate.p12
+          security import ${{ runner.temp }}/certificate.p12 \
+            -P "$CERTIFICATE_PASSWORD" \
+            -A \
+            -t cert \
+            -f pkcs12 \
+            -k "$KEYCHAIN_PATH"
+
+          security list-keychain -d user -s "$KEYCHAIN_PATH"
+          echo "KEYCHAIN_PATH=$KEYCHAIN_PATH" >> $GITHUB_ENV
+
+      - name: Build Universal App (Signed)
+        if: steps.check-secrets.outputs.has_certificate == 'true'
+        env:
+          TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        working-directory: app/MumbleFish
+        run: |
+          xcodebuild -scheme ${{ env.APP_NAME }} \
+            -configuration Release \
+            -archivePath ${{ runner.temp }}/${{ env.APP_NAME }}.xcarchive \
+            -destination "generic/platform=macOS" \
+            ARCHS="arm64 x86_64" \
+            ONLY_ACTIVE_ARCH=NO \
+            CODE_SIGN_STYLE=Manual \
+            CODE_SIGN_IDENTITY="Developer ID Application" \
+            DEVELOPMENT_TEAM="$TEAM_ID" \
+            OTHER_CODE_SIGN_FLAGS="--keychain ${{ env.KEYCHAIN_PATH }}" \
+            archive
+
+          mkdir -p ${{ runner.temp }}/export
+          cp -R "${{ runner.temp }}/${{ env.APP_NAME }}.xcarchive/Products/Applications/${{ env.APP_NAME }}.app" \
+            "${{ runner.temp }}/export/"
+
+      - name: Verify Code Signature
+        if: steps.check-secrets.outputs.has_certificate == 'true'
+        run: |
+          echo "Verifying code signature..."
+          codesign --verify --deep --strict "${{ runner.temp }}/export/${{ env.APP_NAME }}.app"
+          echo "Checking signature details..."
+          codesign -dv --verbose=4 "${{ runner.temp }}/export/${{ env.APP_NAME }}.app"
+
+      - name: Notarize App
+        if: steps.check-secrets.outputs.has_certificate == 'true' && steps.check-secrets.outputs.has_notarization == 'true'
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          cd ${{ runner.temp }}/export
+          zip -r ${{ env.APP_NAME }}.zip ${{ env.APP_NAME }}.app
+
+          xcrun notarytool submit ${{ env.APP_NAME }}.zip \
+            --apple-id "$APPLE_ID" \
+            --password "$APPLE_APP_SPECIFIC_PASSWORD" \
+            --team-id "$TEAM_ID" \
+            --wait
+
+          xcrun stapler staple ${{ env.APP_NAME }}.app
+
+      # --- Package ---
+      - name: Create DMG
+        run: |
+          hdiutil create -volname "${{ env.APP_NAME }}" \
+            -srcfolder "${{ runner.temp }}/export/${{ env.APP_NAME }}.app" \
+            -ov -format UDZO \
+            "${{ runner.temp }}/${{ env.APP_NAME }}.dmg"
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.APP_NAME }}
+          path: ${{ runner.temp }}/${{ env.APP_NAME }}.dmg
+
+      - name: Upload to Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ runner.temp }}/${{ env.APP_NAME }}.dmg
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Cleanup Keychain
+        if: always()
+        run: |
+          if [ -f "${{ runner.temp }}/app-signing.keychain-db" ]; then
+            security delete-keychain "${{ runner.temp }}/app-signing.keychain-db" || true
+          fi
